@@ -5,9 +5,9 @@ import '../../../constants.dart';
 class ReviewBox extends StatelessWidget {
   final Review review;
   const ReviewBox({
-    Key key,
-    @required this.review,
-  }) : super(key: key);
+    super.key,
+    required this.review,
+  });
 
   @override
   Widget build(BuildContext context) {

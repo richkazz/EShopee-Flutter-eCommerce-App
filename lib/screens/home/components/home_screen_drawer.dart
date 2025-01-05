@@ -20,8 +20,8 @@ import '../../change_display_name/change_display_name_screen.dart';
 
 class HomeScreenDrawer extends StatelessWidget {
   const HomeScreenDrawer({
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

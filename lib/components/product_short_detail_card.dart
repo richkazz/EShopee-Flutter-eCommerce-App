@@ -10,20 +10,20 @@ class ProductShortDetailCard extends StatelessWidget {
   final String productId;
   final VoidCallback onPressed;
   const ProductShortDetailCard({
-    Key key,
-    @required this.productId,
-    @required this.onPressed,
-  }) : super(key: key);
+    super.key,
+    required this.productId,
+    required this.onPressed,
+  });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onPressed,
-      child: FutureBuilder<Product>(
+      child: FutureBuilder<Product?>(
         future: ProductDatabaseHelper().getProductWithID(productId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            final product = snapshot.data;
+            final product = snapshot.data!;
             return Row(
               children: [
                 SizedBox(

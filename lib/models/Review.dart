@@ -10,12 +10,12 @@ class Review extends Model {
   String feedback;
   Review(
     String id, {
-    this.reviewerUid,
+    required this.reviewerUid,
     this.rating = 3,
-    this.feedback,
+    required this.feedback,
   }) : super(id);
 
-  factory Review.fromMap(Map<String, dynamic> map, {String id}) {
+  factory Review.fromMap(Map<String, dynamic> map, {required String id}) {
     return Review(
       id,
       reviewerUid: map[REVIEWER_UID_KEY],
@@ -37,9 +37,9 @@ class Review extends Model {
   @override
   Map<String, dynamic> toUpdateMap() {
     final map = <String, dynamic>{};
-    if (reviewerUid != null) map[REVIEWER_UID_KEY] = reviewerUid;
-    if (rating != null) map[RATING_KEY] = rating;
-    if (feedback != null) map[FEEDBACK_KEY] = feedback;
+    map[REVIEWER_UID_KEY] = reviewerUid;
+    map[RATING_KEY] = rating;
+    map[FEEDBACK_KEY] = feedback;
     return map;
   }
 }

@@ -2,18 +2,15 @@ import 'dart:io';
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/constants.dart';
-import 'package:e_commerce_app_flutter/exceptions/local_files_handling/image_picking_exceptions.dart';
 import 'package:e_commerce_app_flutter/exceptions/local_files_handling/local_file_handling_exception.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
 import 'package:e_commerce_app_flutter/services/firestore_files_access/firestore_files_access_service.dart';
 import 'package:e_commerce_app_flutter/services/local_files_access/local_files_access_service.dart';
 import 'package:e_commerce_app_flutter/size_config.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 import '../provider_models/body_model.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 
 class Body extends StatelessWidget {
   @override
@@ -71,12 +68,7 @@ class Body extends StatelessWidget {
           Logger().w(error.toString());
         }
         ImageProvider backImage;
-        if (bodyState.chosenImage != null) {
-          backImage = MemoryImage(bodyState.chosenImage.readAsBytesSync());
-        } else if (snapshot.hasData && snapshot.data != null) {
-          final String url = snapshot.data.data()[UserDatabaseHelper.DP_KEY];
-          if (url != null) backImage = NetworkImage(url);
-        }
+        backImage = MemoryImage(bodyState.chosenImage.readAsBytesSync());
         return CircleAvatar(
           radius: SizeConfig.screenWidth * 0.3,
           backgroundColor: kTextColor.withOpacity(0.5),
@@ -87,13 +79,10 @@ class Body extends StatelessWidget {
   }
 
   void getImageFromUser(BuildContext context, ChosenImage bodyState) async {
-    String path;
-    String snackbarMessage;
+    late String path;
+    late String snackbarMessage;
     try {
       path = await choseImageFromLocalFiles(context);
-      if (path == null) {
-        throw LocalImagePickingUnknownReasonFailureException();
-      }
     } on LocalFileHandlingException catch (e) {
       Logger().i("LocalFileHandlingException: $e");
       snackbarMessage = e.toString();
@@ -101,17 +90,12 @@ class Body extends StatelessWidget {
       Logger().i("LocalFileHandlingException: $e");
       snackbarMessage = e.toString();
     } finally {
-      if (snackbarMessage != null) {
-        Logger().i(snackbarMessage);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(snackbarMessage),
-          ),
-        );
-      }
-    }
-    if (path == null) {
-      return;
+      Logger().i(snackbarMessage);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(snackbarMessage),
+        ),
+      );
     }
     bodyState.setChosenImage = File(path);
   }
@@ -149,7 +133,7 @@ class Body extends StatelessWidget {
   Future<void> uploadImageToFirestorage(
       BuildContext context, ChosenImage bodyState) async {
     bool uploadDisplayPictureStatus = false;
-    String snackbarMessage;
+    late String snackbarMessage;
     try {
       final downloadUrl = await FirestoreFilesAccess().uploadFileToPath(
           bodyState.chosenImage,
@@ -162,9 +146,6 @@ class Body extends StatelessWidget {
       } else {
         throw "Coulnd't update display picture due to unknown reason";
       }
-    } on FirebaseException catch (e) {
-      Logger().w("Firebase Exception: $e");
-      snackbarMessage = "Something went wrong";
     } catch (e) {
       Logger().w("Unknown Exception: $e");
       snackbarMessage = "Something went wrong";
@@ -203,7 +184,7 @@ class Body extends StatelessWidget {
   Future<void> removeImageFromFirestore(
       BuildContext context, ChosenImage bodyState) async {
     bool status = false;
-    String snackbarMessage;
+    late String snackbarMessage;
     try {
       bool fileDeletedFromFirestore = false;
       fileDeletedFromFirestore = await FirestoreFilesAccess()
@@ -218,9 +199,6 @@ class Body extends StatelessWidget {
       } else {
         throw "Coulnd't removed due to unknown reason";
       }
-    } on FirebaseException catch (e) {
-      Logger().w("Firebase Exception: $e");
-      snackbarMessage = "Something went wrong";
     } catch (e) {
       Logger().w("Unknown Exception: $e");
       snackbarMessage = "Something went wrong";

@@ -8,7 +8,7 @@ import 'edit_product_form.dart';
 class Body extends StatelessWidget {
   final Product productToEdit;
 
-  const Body({Key key, this.productToEdit}) : super(key: key);
+  const Body({super.key, this.productToEdit});
   @override
   Widget build(BuildContext context) {
     return SafeArea(

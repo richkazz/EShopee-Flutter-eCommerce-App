@@ -1,13 +1,41 @@
 import 'dart:async';
-
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/messeged_firebaseauth_exception.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/credential_actions_exceptions.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/reauth_exceptions.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/signin_exceptions.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/signup_exceptions.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
+
+// Fake User class to mimic Firebase User
+class User {
+  final String uid;
+  final String email;
+  final String displayName;
+  final bool emailVerified;
+
+  User({
+    required this.uid,
+    required this.email,
+    this.displayName = "",
+    this.emailVerified = false,
+  });
+
+  // Simulate updating display name
+  User copyWith({String? displayName, bool? emailVerified}) {
+    return User(
+      uid: this.uid,
+      email: this.email,
+      displayName: displayName ?? this.displayName,
+      emailVerified: emailVerified ?? this.emailVerified,
+    );
+  }
+
+  Future<void> delete() async {
+    // Simulate deleting a user.
+    print("User $uid deleted");
+  }
+
+  Future<void> sendEmailVerification() async {
+    // Simulate sending a verification email.
+    print("Verification email sent to $email");
+  }
+}
 
 class AuthentificationService {
   static const String USER_NOT_FOUND_EXCEPTION_CODE = "user-not-found";
@@ -29,243 +57,220 @@ class AuthentificationService {
   static const String REQUIRES_RECENT_LOGIN_EXCEPTION_CODE =
       "requires-recent-login";
 
-  FirebaseAuth _firebaseAuth;
+  // Fake user data
+  Map<String, Map<String, dynamic>> _users = {};
+  User? _currentUser;
 
   AuthentificationService._privateConstructor();
+
   static AuthentificationService _instance =
       AuthentificationService._privateConstructor();
-
-  FirebaseAuth get firebaseAuth {
-    if (_firebaseAuth == null) {
-      _firebaseAuth = FirebaseAuth.instance;
-    }
-    return _firebaseAuth;
-  }
 
   factory AuthentificationService() {
     return _instance;
   }
 
-  Stream<User> get authStateChanges => firebaseAuth.authStateChanges();
-
-  Stream<User> get userChanges => firebaseAuth.userChanges();
-
-  Future<void> deleteUserAccount() async {
-    await currentUser.delete();
-    await signOut();
+  // Simulate authStateChanges
+  Stream<User?> get authStateChanges {
+    return Stream.value(_currentUser);
   }
 
-  Future<bool> reauthCurrentUser(password) async {
-    try {
-      UserCredential userCredential =
-          await firebaseAuth.signInWithEmailAndPassword(
-              email: currentUser.email, password: password);
-      userCredential = await currentUser
-          .reauthenticateWithCredential(userCredential.credential);
-    } on FirebaseAuthException catch (e) {
-      if (e.code == WRONG_PASSWORD_EXCEPTION_CODE) {
-        throw FirebaseSignInAuthWrongPasswordException();
-      } else {
-        throw FirebaseSignInAuthException(message: e.code);
-      }
-    } catch (e) {
-      throw FirebaseReauthUnknownReasonFailureException(message: e.toString());
+  // Simulate userChanges
+  Stream<User?> get userChanges {
+    return Stream.value(_currentUser);
+  }
+
+  Future<void> deleteUserAccount() async {
+    if (_currentUser != null) {
+      _users.remove(_currentUser!.uid);
+      await _currentUser!.delete();
+      _currentUser = null;
+    } else {
+      throw Exception("No user signed in");
     }
+  }
+
+  Future<bool> reauthCurrentUser(String password) async {
+    if (_currentUser == null) {
+      throw Exception("No user logged in");
+    }
+    if (_users[_currentUser!.uid]!['password'] == password) {
+      return true;
+    } else {
+      throw Exception(WRONG_PASSWORD_EXCEPTION_CODE);
+    }
+  }
+
+  Future<bool> signIn({required String email, required String password}) async {
+    // Find user by email
+    String? uid;
+    for (var entry in _users.entries) {
+      if (entry.value['email'] == email) {
+        uid = entry.key;
+        break;
+      }
+    }
+
+    if (uid == null) {
+      throw Exception(USER_NOT_FOUND_EXCEPTION_CODE);
+    }
+
+    if (_users[uid]!['password'] == password) {
+      if (_users[uid]!['emailVerified']) {
+        _currentUser = User(
+            uid: uid,
+            email: email,
+            displayName: _users[uid]!['displayName'],
+            emailVerified: true);
+        return true;
+      } else {
+        // Simulate sending verification email
+        await User(
+                uid: uid,
+                email: email,
+                displayName: _users[uid]!['displayName'],
+                emailVerified: false)
+            .sendEmailVerification();
+        throw Exception("User not verified");
+      }
+    } else {
+      throw Exception(WRONG_PASSWORD_EXCEPTION_CODE);
+    }
+  }
+
+  Future<bool> signUp({required String email, required String password}) async {
+    // Check if email is already in use
+    for (var entry in _users.entries) {
+      if (entry.value['email'] == email) {
+        throw Exception(EMAIL_ALREADY_IN_USE_EXCEPTION_CODE);
+      }
+    }
+
+    // Validate email and password (basic check)
+    if (!email.contains('@')) {
+      throw Exception(INVALID_EMAIL_EXCEPTION_CODE);
+    }
+    if (password.length < 6) {
+      throw Exception(WEAK_PASSWORD_EXCEPTION_CODE);
+    }
+
+    // Create new user
+    String uid = DateTime.now().millisecondsSinceEpoch.toString();
+    _users[uid] = {
+      'email': email,
+      'password': password,
+      'displayName': '',
+      'emailVerified': false
+    };
+    await User(uid: uid, email: email, displayName: '', emailVerified: false)
+        .sendEmailVerification();
+    // Simulate creating a new user in the database
+    await UserDatabaseHelper().createNewUser(uid);
     return true;
   }
 
-  Future<bool> signIn({String email, String password}) async {
-    try {
-      final UserCredential userCredential = await firebaseAuth
-          .signInWithEmailAndPassword(email: email, password: password);
-      if (userCredential.user.emailVerified) {
-        return true;
-      } else {
-        await userCredential.user.sendEmailVerification();
-        throw FirebaseSignInAuthUserNotVerifiedException();
-      }
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case INVALID_EMAIL_EXCEPTION_CODE:
-          throw FirebaseSignInAuthInvalidEmailException();
-
-        case USER_DISABLED_EXCEPTION_CODE:
-          throw FirebaseSignInAuthUserDisabledException();
-
-        case USER_NOT_FOUND_EXCEPTION_CODE:
-          throw FirebaseSignInAuthUserNotFoundException();
-
-        case WRONG_PASSWORD_EXCEPTION_CODE:
-          throw FirebaseSignInAuthWrongPasswordException();
-
-        case TOO_MANY_REQUESTS_EXCEPTION_CODE:
-          throw FirebaseTooManyRequestsException();
-
-        default:
-          throw FirebaseSignInAuthException(message: e.code);
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
-  Future<bool> signUp({String email, String password}) async {
-    try {
-      final UserCredential userCredential = await firebaseAuth
-          .createUserWithEmailAndPassword(email: email, password: password);
-      final String uid = userCredential.user.uid;
-      if (userCredential.user.emailVerified == false) {
-        await userCredential.user.sendEmailVerification();
-      }
-      await UserDatabaseHelper().createNewUser(uid);
-      return true;
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case EMAIL_ALREADY_IN_USE_EXCEPTION_CODE:
-          throw FirebaseSignUpAuthEmailAlreadyInUseException();
-        case INVALID_EMAIL_EXCEPTION_CODE:
-          throw FirebaseSignUpAuthInvalidEmailException();
-        case OPERATION_NOT_ALLOWED_EXCEPTION_CODE:
-          throw FirebaseSignUpAuthOperationNotAllowedException();
-        case WEAK_PASSWORD_EXCEPTION_CODE:
-          throw FirebaseSignUpAuthWeakPasswordException();
-        default:
-          throw FirebaseSignInAuthException(message: e.code);
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   Future<void> signOut() async {
-    await firebaseAuth.signOut();
+    _currentUser = null;
   }
 
   bool get currentUserVerified {
-    currentUser.reload();
-    return currentUser.emailVerified;
+    return _currentUser?.emailVerified ?? false;
   }
 
   Future<void> sendVerificationEmailToCurrentUser() async {
-    await firebaseAuth.currentUser.sendEmailVerification();
+    if (_currentUser != null) {
+      await _currentUser!.sendEmailVerification();
+      _currentUser =
+          _currentUser!.copyWith(emailVerified: false); // Reset verification
+    }
   }
 
-  User get currentUser {
-    return firebaseAuth.currentUser;
+  User? get currentUser {
+    return _currentUser;
   }
 
   Future<void> updateCurrentUserDisplayName(String updatedDisplayName) async {
-    await currentUser.updateProfile(displayName: updatedDisplayName);
+    if (_currentUser != null) {
+      _currentUser = _currentUser!.copyWith(displayName: updatedDisplayName);
+      _users[_currentUser!.uid]!['displayName'] = updatedDisplayName;
+    }
   }
 
   Future<bool> resetPasswordForEmail(String email) async {
-    try {
-      await firebaseAuth.sendPasswordResetEmail(email: email);
-      return true;
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      if (e.code == USER_NOT_FOUND_EXCEPTION_CODE) {
-        throw FirebaseCredentialActionAuthUserNotFoundException();
-      } else {
-        throw FirebaseCredentialActionAuthException(message: e.code);
+    // Check if user with email exists
+    String? uid;
+    for (var entry in _users.entries) {
+      if (entry.value['email'] == email) {
+        uid = entry.key;
+        break;
       }
-    } catch (e) {
-      rethrow;
     }
+
+    if (uid == null) {
+      throw Exception(USER_NOT_FOUND_EXCEPTION_CODE);
+    }
+
+    // Simulate sending password reset email (basic implementation)
+    print("Password reset email sent to $email");
+    return true;
   }
 
   Future<bool> changePasswordForCurrentUser(
-      {String oldPassword, @required String newPassword}) async {
-    try {
-      bool isOldPasswordProvidedCorrect = true;
-      if (oldPassword != null) {
-        isOldPasswordProvidedCorrect =
-            await verifyCurrentUserPassword(oldPassword);
-      }
-      if (isOldPasswordProvidedCorrect) {
-        await firebaseAuth.currentUser.updatePassword(newPassword);
-
-        return true;
-      } else {
-        throw FirebaseReauthWrongPasswordException();
-      }
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case WEAK_PASSWORD_EXCEPTION_CODE:
-          throw FirebaseCredentialActionAuthWeakPasswordException();
-        case REQUIRES_RECENT_LOGIN_EXCEPTION_CODE:
-          throw FirebaseCredentialActionAuthRequiresRecentLoginException();
-        default:
-          throw FirebaseCredentialActionAuthException(message: e.code);
-      }
-    } catch (e) {
-      rethrow;
+      {String? oldPassword, required String newPassword}) async {
+    if (_currentUser == null) {
+      throw Exception("No user signed in");
     }
+    if (newPassword.length < 6) {
+      throw Exception(WEAK_PASSWORD_EXCEPTION_CODE);
+    }
+
+    if (oldPassword != null) {
+      if (_users[_currentUser!.uid]!['password'] != oldPassword) {
+        throw Exception(WRONG_PASSWORD_EXCEPTION_CODE);
+      }
+    }
+
+    _users[_currentUser!.uid]!['password'] = newPassword;
+    return true;
   }
 
   Future<bool> changeEmailForCurrentUser(
-      {String password, String newEmail}) async {
-    try {
-      bool isPasswordProvidedCorrect = true;
-      if (password != null) {
-        isPasswordProvidedCorrect = await verifyCurrentUserPassword(password);
-      }
-      if (isPasswordProvidedCorrect) {
-        await currentUser.verifyBeforeUpdateEmail(newEmail);
-
-        return true;
-      } else {
-        throw FirebaseReauthWrongPasswordException();
-      }
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      throw FirebaseCredentialActionAuthException(message: e.code);
-    } catch (e) {
-      rethrow;
+      {String? password, required String newEmail}) async {
+    if (_currentUser == null) {
+      throw Exception("No user signed in");
     }
+
+    if (password != null) {
+      if (_users[_currentUser!.uid]!['password'] != password) {
+        throw Exception(WRONG_PASSWORD_EXCEPTION_CODE);
+      }
+    }
+
+    // Check if new email is already in use
+    for (var entry in _users.entries) {
+      if (entry.value['email'] == newEmail) {
+        throw Exception(EMAIL_ALREADY_IN_USE_EXCEPTION_CODE);
+      }
+    }
+
+    _users[_currentUser!.uid]!['email'] = newEmail;
+    _users[_currentUser!.uid]!['emailVerified'] = false;
+    _currentUser = User(
+      uid: _currentUser!.uid,
+      email: newEmail,
+      displayName: _currentUser!.displayName,
+      emailVerified: false,
+    );
+
+    // Simulate sending verification email for new email
+    await _currentUser!.sendEmailVerification();
+    return true;
   }
 
   Future<bool> verifyCurrentUserPassword(String password) async {
-    try {
-      final AuthCredential authCredential = EmailAuthProvider.credential(
-        email: currentUser.email,
-        password: password,
-      );
-
-      final authCredentials =
-          await currentUser.reauthenticateWithCredential(authCredential);
-      return authCredentials != null;
-    } on MessagedFirebaseAuthException {
-      rethrow;
-    } on FirebaseAuthException catch (e) {
-      switch (e.code) {
-        case USER_MISMATCH_EXCEPTION_CODE:
-          throw FirebaseReauthUserMismatchException();
-        case USER_NOT_FOUND_EXCEPTION_CODE:
-          throw FirebaseReauthUserNotFoundException();
-        case INVALID_CREDENTIALS_EXCEPTION_CODE:
-          throw FirebaseReauthInvalidCredentialException();
-        case INVALID_EMAIL_EXCEPTION_CODE:
-          throw FirebaseReauthInvalidEmailException();
-        case WRONG_PASSWORD_EXCEPTION_CODE:
-          throw FirebaseReauthWrongPasswordException();
-        case INVALID_VERIFICATION_CODE_EXCEPTION_CODE:
-          throw FirebaseReauthInvalidVerificationCodeException();
-        case INVALID_VERIFICATION_ID_EXCEPTION_CODE:
-          throw FirebaseReauthInvalidVerificationIdException();
-        default:
-          throw FirebaseReauthException(message: e.code);
-      }
-    } catch (e) {
-      rethrow;
+    if (_currentUser == null) {
+      throw Exception("No user signed in");
     }
+    return _users[_currentUser!.uid]!['password'] == password;
   }
 }

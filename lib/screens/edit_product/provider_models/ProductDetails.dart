@@ -9,7 +9,7 @@ enum ImageType {
 class CustomImage {
   final ImageType imgType;
   final String path;
-  CustomImage({this.imgType = ImageType.local, @required this.path});
+  CustomImage({this.imgType = ImageType.local, required this.path});
   @override
   String toString() {
     return "Instance of Custom Image: {imgType: $imgType, path: $path}";
@@ -78,10 +78,7 @@ class ProductDetails extends ChangeNotifier {
   }
 
   void removeSearchTag({int index}) {
-    if (index == null)
-      _searchTags.removeLast();
-    else
-      _searchTags.removeAt(index);
+    _searchTags.removeAt(index);
     notifyListeners();
   }
 }

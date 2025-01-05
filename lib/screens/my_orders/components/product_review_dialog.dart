@@ -8,9 +8,9 @@ import '../../../size_config.dart';
 class ProductReviewDialog extends StatelessWidget {
   final Review review;
   ProductReviewDialog({
-    Key key,
-    @required this.review,
-  }) : super(key: key);
+    super.key,
+    required this.review,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -8,11 +8,11 @@ class SearchResultScreen extends StatelessWidget {
   final List<String> searchResultProductsId;
 
   const SearchResultScreen({
-    Key key,
-    @required this.searchQuery,
-    @required this.searchResultProductsId,
-    @required this.searchIn,
-  }) : super(key: key);
+    super.key,
+    required this.searchQuery,
+    required this.searchResultProductsId,
+    required this.searchIn,
+  });
   @override
   Widget build(BuildContext context) {
     return Scaffold(

@@ -11,16 +11,15 @@ import 'package:e_commerce_app_flutter/services/database/product_database_helper
 import 'package:e_commerce_app_flutter/size_config.dart';
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:logger/logger.dart';
 
 class Body extends StatefulWidget {
   final ProductType productType;
 
   Body({
-    Key key,
-    @required this.productType,
-  }) : super(key: key);
+    super.key,
+    required this.productType,
+  });
 
   @override
   _BodyState createState() =>
@@ -30,7 +29,7 @@ class Body extends StatefulWidget {
 class _BodyState extends State<Body> {
   final CategoryProductsStream categoryProductsStream;
 
-  _BodyState({@required this.categoryProductsStream});
+  _BodyState({required this.categoryProductsStream});
 
   @override
   void initState() {
@@ -72,7 +71,7 @@ class _BodyState extends State<Body> {
                       stream: categoryProductsStream.stream,
                       builder: (context, snapshot) {
                         if (snapshot.hasData) {
-                          List<String> productsId = snapshot.data;
+                          List<String> productsId = snapshot.data!;
                           if (productsId.length == 0) {
                             return Center(
                               child: NothingToShowContainer(
@@ -133,22 +132,18 @@ class _BodyState extends State<Body> {
                 searchedProductsId = await ProductDatabaseHelper()
                     .searchInProducts(query.toLowerCase(),
                         productType: widget.productType);
-                if (searchedProductsId != null) {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => SearchResultScreen(
-                        searchQuery: query,
-                        searchResultProductsId: searchedProductsId,
-                        searchIn:
-                            EnumToString.convertToString(widget.productType),
-                      ),
+                await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SearchResultScreen(
+                      searchQuery: query,
+                      searchResultProductsId: searchedProductsId,
+                      searchIn:
+                          EnumToString.convertToString(widget.productType),
                     ),
-                  );
-                  await refreshPage();
-                } else {
-                  throw "Couldn't perform search due to some unknown reason";
-                }
+                  ),
+                );
+                await refreshPage();
               } catch (e) {
                 final error = e.toString();
                 Logger().e(error);

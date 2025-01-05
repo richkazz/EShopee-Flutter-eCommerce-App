@@ -8,11 +8,12 @@ class OrderedProduct extends Model {
   String orderDate;
   OrderedProduct(
     String id, {
-    this.productUid,
-    this.orderDate,
+    required this.productUid,
+    required this.orderDate,
   }) : super(id);
 
-  factory OrderedProduct.fromMap(Map<String, dynamic> map, {String id}) {
+  factory OrderedProduct.fromMap(Map<String, dynamic> map,
+      {required String id}) {
     return OrderedProduct(
       id,
       productUid: map[PRODUCT_UID_KEY],
@@ -32,8 +33,8 @@ class OrderedProduct extends Model {
   @override
   Map<String, dynamic> toUpdateMap() {
     final map = <String, dynamic>{};
-    if (productUid != null) map[PRODUCT_UID_KEY] = productUid;
-    if (orderDate != null) map[ORDER_DATE_KEY] = orderDate;
+    map[PRODUCT_UID_KEY] = productUid;
+    map[ORDER_DATE_KEY] = orderDate;
     return map;
   }
 }

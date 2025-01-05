@@ -7,9 +7,9 @@ import '../../../size_config.dart';
 class AppReviewDialog extends StatelessWidget {
   final AppReview appReview;
   AppReviewDialog({
-    Key key,
-    @required this.appReview,
-  }) : super(key: key);
+    super.key,
+    required this.appReview,
+  });
 
   @override
   Widget build(BuildContext context) {

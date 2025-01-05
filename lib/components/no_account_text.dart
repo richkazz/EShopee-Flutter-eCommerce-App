@@ -5,8 +5,8 @@ import 'package:e_commerce_app_flutter/constants.dart';
 
 class NoAccountText extends StatelessWidget {
   const NoAccountText({
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

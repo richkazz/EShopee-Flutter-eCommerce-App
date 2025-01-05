@@ -2,12 +2,9 @@ import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/custom_suffix_icon.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/constants.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/messeged_firebaseauth_exception.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/credential_actions_exceptions.dart';
 import 'package:e_commerce_app_flutter/services/authentification/authentification_service.dart';
 import 'package:e_commerce_app_flutter/size_config.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 
 class ChangePasswordForm extends StatefulWidget {
@@ -133,8 +130,8 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
   }
 
   Future<void> changePasswordButtonCallback() async {
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
       final AuthentificationService authService = AuthentificationService();
       bool currentPasswordValidation = await authService
           .verifyCurrentUserPassword(currentPasswordController.text);
@@ -142,19 +139,17 @@ class _ChangePasswordFormState extends State<ChangePasswordForm> {
         print("Current password provided is wrong");
       } else {
         bool updationStatus = false;
-        String snackbarMessage;
+        late String snackbarMessage;
         try {
           updationStatus = await authService.changePasswordForCurrentUser(
               newPassword: newPasswordController.text);
           if (updationStatus == true) {
             snackbarMessage = "Password changed successfully";
           } else {
-            throw FirebaseCredentialActionAuthUnknownReasonFailureException(
-                message:
-                    "Failed to change password, due to some unknown reason");
+            // throw FirebaseCredentialActionAuthUnknownReasonFailureException(
+            //     message:
+            //         "Failed to change password, due to some unknown reason");
           }
-        } on MessagedFirebaseAuthException catch (e) {
-          snackbarMessage = e.message;
         } catch (e) {
           snackbarMessage = e.toString();
         } finally {

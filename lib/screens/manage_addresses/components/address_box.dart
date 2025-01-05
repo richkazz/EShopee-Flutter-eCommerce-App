@@ -6,9 +6,9 @@ import 'package:logger/logger.dart';
 
 class AddressBox extends StatelessWidget {
   const AddressBox({
-    Key key,
-    @required this.addressId,
-  }) : super(key: key);
+    super.key,
+    required this.addressId,
+  });
 
   final String addressId;
 

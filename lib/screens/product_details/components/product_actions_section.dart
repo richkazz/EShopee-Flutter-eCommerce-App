@@ -6,7 +6,6 @@ import 'package:e_commerce_app_flutter/screens/product_details/provider_models/P
 import 'package:e_commerce_app_flutter/services/authentification/authentification_service.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
@@ -17,9 +16,9 @@ class ProductActionsSection extends StatelessWidget {
   final Product product;
 
   const ProductActionsSection({
-    Key key,
-    @required this.product,
-  }) : super(key: key);
+    super.key,
+    required this.product,
+  });
 
   @override
   Widget build(BuildContext context) {

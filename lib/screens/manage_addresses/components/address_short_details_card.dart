@@ -10,8 +10,7 @@ class AddressShortDetailsCard extends StatelessWidget {
   final Function onTap;
 
   const AddressShortDetailsCard(
-      {Key key, @required this.addressId, @required this.onTap})
-      : super(key: key);
+      {super.key, required this.addressId, required this.onTap});
   @override
   Widget build(BuildContext context) {
     return InkWell(

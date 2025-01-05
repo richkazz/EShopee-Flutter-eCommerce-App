@@ -8,9 +8,9 @@ import 'expandable_text.dart';
 
 class ProductDescription extends StatelessWidget {
   const ProductDescription({
-    Key key,
-    @required this.product,
-  }) : super(key: key);
+    super.key,
+    required this.product,
+  });
 
   final Product product;
   @override

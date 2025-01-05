@@ -8,10 +8,10 @@ class HomeHeader extends StatelessWidget {
   final Function onSearchSubmitted;
   final Function onCartButtonPressed;
   const HomeHeader({
-    Key key,
-    @required this.onSearchSubmitted,
-    @required this.onCartButtonPressed,
-  }) : super(key: key);
+    super.key,
+    required this.onSearchSubmitted,
+    required this.onCartButtonPressed,
+  });
 
   @override
   Widget build(BuildContext context) {

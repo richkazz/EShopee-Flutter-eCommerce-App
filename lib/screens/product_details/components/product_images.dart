@@ -9,9 +9,9 @@ import '../../../size_config.dart';
 
 class ProductImages extends StatelessWidget {
   const ProductImages({
-    Key key,
-    @required this.product,
-  }) : super(key: key);
+    super.key,
+    required this.product,
+  });
 
   final Product product;
 
@@ -73,7 +73,7 @@ class ProductImages extends StatelessWidget {
   }
 
   Widget buildSmallPreview(ProductImageSwiper productImagesSwiper,
-      {@required int index}) {
+      {required int index}) {
     return GestureDetector(
       onTap: () {
         productImagesSwiper.currentImageIndex = index;

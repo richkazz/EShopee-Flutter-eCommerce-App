@@ -9,11 +9,11 @@ class NothingToShowContainer extends StatelessWidget {
   final String secondaryMessage;
 
   const NothingToShowContainer({
-    Key key,
+    super.key,
     this.iconPath = "assets/icons/empty_box.svg",
     this.primaryMessage = "Nothing to show",
     this.secondaryMessage = "",
-  }) : super(key: key);
+  });
   @override
   Widget build(BuildContext context) {
     return SizedBox(

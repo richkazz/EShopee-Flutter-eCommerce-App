@@ -6,10 +6,10 @@ class SectionTile extends StatelessWidget {
   final String title;
   final GestureTapCallback press;
   const SectionTile({
-    Key key,
-    @required this.title,
-    @required this.press,
-  }) : super(key: key);
+    super.key,
+    required this.title,
+    required this.press,
+  });
 
   @override
   Widget build(BuildContext context) {

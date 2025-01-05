@@ -5,10 +5,10 @@ class TopRoundedContainer extends StatelessWidget {
   final Color color;
   final Widget child;
   const TopRoundedContainer({
-    Key key,
+    super.key,
     this.color = Colors.white,
-    @required this.child,
-  }) : super(key: key);
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {

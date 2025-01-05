@@ -9,10 +9,10 @@ class ProductCard extends StatelessWidget {
   final String productId;
   final GestureTapCallback press;
   const ProductCard({
-    Key key,
-    @required this.productId,
-    @required this.press,
-  }) : super(key: key);
+    super.key,
+    required this.productId,
+    required this.press,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,11 +28,11 @@ class ProductCard extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          child: FutureBuilder<Product>(
+          child: FutureBuilder<Product?>(
             future: ProductDatabaseHelper().getProductWithID(productId),
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                final Product product = snapshot.data;
+                final Product product = snapshot.data!;
                 return buildProductCardItems(product);
               } else if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(

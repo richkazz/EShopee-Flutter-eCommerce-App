@@ -11,7 +11,6 @@ import 'package:e_commerce_app_flutter/services/firestore_files_access/firestore
 import 'package:e_commerce_app_flutter/size_config.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 
 import '../../../utils.dart';

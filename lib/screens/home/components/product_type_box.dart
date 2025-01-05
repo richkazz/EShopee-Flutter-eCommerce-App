@@ -9,11 +9,11 @@ class ProductTypeBox extends StatelessWidget {
   final String title;
   final VoidCallback onPress;
   const ProductTypeBox({
-    Key key,
-    @required this.icon,
-    @required this.title,
-    @required this.onPress,
-  }) : super(key: key);
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onPress,
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/components/nothingtoshow_container.dart';
@@ -13,9 +12,7 @@ import 'package:e_commerce_app_flutter/services/data_streams/cart_items_stream.d
 import 'package:e_commerce_app_flutter/services/database/product_database_helper.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
 import 'package:e_commerce_app_flutter/size_config.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 
 import '../../../utils.dart';
@@ -27,7 +24,7 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   final CartItemsStream cartItemsStream = CartItemsStream();
-  PersistentBottomSheetController bottomSheetHandler;
+  late PersistentBottomSheetController bottomSheetHandler;
   @override
   void initState() {
     super.initState();
@@ -85,7 +82,7 @@ class _BodyState extends State<Body> {
       stream: cartItemsStream.stream,
       builder: (context, snapshot) {
         if (snapshot.hasData) {
-          List<String> cartItemsId = snapshot.data;
+          List<String> cartItemsId = snapshot.data!;
           if (cartItemsId.length == 0) {
             return Center(
               child: NothingToShowContainer(
@@ -164,7 +161,7 @@ class _BodyState extends State<Body> {
           if (confirmation) {
             if (direction == DismissDirection.startToEnd) {
               bool result = false;
-              String snackbarMessage;
+              late String snackbarMessage;
               try {
                 result = await UserDatabaseHelper()
                     .removeProductFromCart(cartItemId);
@@ -174,9 +171,6 @@ class _BodyState extends State<Body> {
                 } else {
                   throw "Coulnd't remove product from cart due to unknown reason";
                 }
-              } on FirebaseException catch (e) {
-                Logger().w("Firebase Exception: $e");
-                snackbarMessage = "Something went wrong";
               } catch (e) {
                 Logger().w("Unknown Exception: $e");
                 snackbarMessage = "Something went wrong";
@@ -211,11 +205,11 @@ class _BodyState extends State<Body> {
         border: Border.all(color: kTextColor.withOpacity(0.15)),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: FutureBuilder<Product>(
+      child: FutureBuilder<Product?>(
         future: ProductDatabaseHelper().getProductWithID(cartItemId),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            Product product = snapshot.data;
+            Product product = snapshot.data!;
             return Row(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -268,7 +262,7 @@ class _BodyState extends State<Body> {
                             int itemCount = 0;
                             if (snapshot.hasData) {
                               final cartItem = snapshot.data;
-                              itemCount = cartItem.itemCount;
+                              itemCount = cartItem!.itemCount;
                             } else if (snapshot.hasError) {
                               final error = snapshot.error.toString();
                               Logger().e(error);
@@ -363,40 +357,33 @@ class _BodyState extends State<Body> {
     }
     final orderFuture = UserDatabaseHelper().emptyCart();
     orderFuture.then((orderedProductsUid) async {
-      if (orderedProductsUid != null) {
-        print(orderedProductsUid);
-        final dateTime = DateTime.now();
-        final formatedDateTime =
-            "${dateTime.day}-${dateTime.month}-${dateTime.year}";
-        List<OrderedProduct> orderedProducts = orderedProductsUid
-            .map((e) => OrderedProduct(null,
-                productUid: e, orderDate: formatedDateTime))
-            .toList();
-        bool addedProductsToMyProducts = false;
-        String snackbarmMessage;
-        try {
-          addedProductsToMyProducts =
-              await UserDatabaseHelper().addToMyOrders(orderedProducts);
-          if (addedProductsToMyProducts) {
-            snackbarmMessage = "Products ordered Successfully";
-          } else {
-            throw "Could not order products due to unknown issue";
-          }
-        } on FirebaseException catch (e) {
-          Logger().e(e.toString());
-          snackbarmMessage = e.toString();
-        } catch (e) {
-          Logger().e(e.toString());
-          snackbarmMessage = e.toString();
-        } finally {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(snackbarmMessage ?? "Something went wrong"),
-            ),
-          );
+      print(orderedProductsUid);
+      final dateTime = DateTime.now();
+      final formatedDateTime =
+          "${dateTime.day}-${dateTime.month}-${dateTime.year}";
+      List<OrderedProduct> orderedProducts = orderedProductsUid
+          .map((e) =>
+              OrderedProduct("", productUid: e, orderDate: formatedDateTime))
+          .toList();
+      bool addedProductsToMyProducts = false;
+      late String snackbarmMessage;
+      try {
+        addedProductsToMyProducts =
+            await UserDatabaseHelper().addToMyOrders(orderedProducts);
+        if (addedProductsToMyProducts) {
+          snackbarmMessage = "Products ordered Successfully";
+        } else {
+          throw "Could not order products due to unknown issue";
         }
-      } else {
-        throw "Something went wrong while clearing cart";
+      } catch (e) {
+        Logger().e(e.toString());
+        snackbarmMessage = e.toString();
+      } finally {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(snackbarmMessage ?? "Something went wrong"),
+          ),
+        );
       }
       await showDialog(
         context: context,
@@ -428,9 +415,7 @@ class _BodyState extends State<Body> {
   }
 
   void shutBottomSheet() {
-    if (bottomSheetHandler != null) {
-      bottomSheetHandler.close();
-    }
+    bottomSheetHandler.close();
   }
 
   Future<void> arrowUpCallback(String cartItemId) async {

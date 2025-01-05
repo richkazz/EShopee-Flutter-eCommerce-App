@@ -8,11 +8,11 @@ class CategoryCard extends StatelessWidget {
   final String text;
   final GestureTapCallback press;
   const CategoryCard({
-    Key key,
-    @required this.icon,
-    @required this.text,
-    @required this.press,
-  }) : super(key: key);
+    super.key,
+    required this.icon,
+    required this.text,
+    required this.press,
+  });
 
   @override
   Widget build(BuildContext context) {

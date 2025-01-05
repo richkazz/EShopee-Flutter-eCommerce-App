@@ -4,11 +4,11 @@ import '../constants.dart';
 import '../size_config.dart';
 
 class SearchField extends StatelessWidget {
-  final Function onSubmit;
+  final Function(String)? onSubmit;
   const SearchField({
-    Key key,
-    @required this.onSubmit,
-  }) : super(key: key);
+    super.key,
+    required this.onSubmit,
+  });
 
   @override
   Widget build(BuildContext context) {

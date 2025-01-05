@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'constants.dart';
 
@@ -40,11 +41,11 @@ InputDecorationTheme inputDecorationTheme() {
 
 TextTheme textTheme() {
   return TextTheme(
-    bodyText1: TextStyle(
+    bodyLarge: TextStyle(
       color: kTextColor,
       fontSize: 16,
     ),
-    bodyText2: TextStyle(
+    bodyMedium: TextStyle(
       color: kTextColor,
       fontSize: 14,
     ),
@@ -55,11 +56,11 @@ AppBarTheme appBarTheme() {
   return AppBarTheme(
     color: Colors.white,
     elevation: 0,
-    brightness: Brightness.light,
     iconTheme: IconThemeData(color: Colors.black),
-    textTheme: TextTheme(
-      headline6: TextStyle(color: Color(0XFF8B8B8B), fontSize: 18),
-    ),
-    centerTitle: true,
+    centerTitle: true, systemOverlayStyle: SystemUiOverlayStyle.dark, toolbarTextStyle: TextTheme(
+      titleLarge: TextStyle(color: Color(0XFF8B8B8B), fontSize: 18),
+    ).bodyMedium, titleTextStyle: TextTheme(
+      titleLarge: TextStyle(color: Color(0XFF8B8B8B), fontSize: 18),
+    ).titleLarge,
   );
 }

@@ -9,11 +9,10 @@ class IconButtonWithCounter extends StatelessWidget {
   final int numOfItems;
   final GestureTapCallback press;
   const IconButtonWithCounter({
-    Key key,
-    @required this.svgSrc,
+    required this.svgSrc,
     this.numOfItems = 0,
-    @required this.press,
-  }) : super(key: key);
+    required this.press,
+  });
 
   @override
   Widget build(BuildContext context) {

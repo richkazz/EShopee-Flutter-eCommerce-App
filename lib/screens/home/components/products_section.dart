@@ -13,12 +13,12 @@ class ProductsSection extends StatelessWidget {
   final String emptyListMessage;
   final Function onProductCardTapped;
   const ProductsSection({
-    Key key,
-    @required this.sectionTitle,
-    @required this.productsStreamController,
+    super.key,
+    required this.sectionTitle,
+    required this.productsStreamController,
     this.emptyListMessage = "No Products to show here",
-    @required this.onProductCardTapped,
-  }) : super(key: key);
+    required this.onProductCardTapped,
+  });
 
   @override
   Widget build(BuildContext context) {

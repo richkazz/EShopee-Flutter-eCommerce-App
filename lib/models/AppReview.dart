@@ -9,11 +9,11 @@ class AppReview extends Model {
 
   AppReview(
     String id, {
-    this.liked,
-    this.feedback,
+    required this.liked,
+    required this.feedback,
   }) : super(id);
 
-  factory AppReview.fromMap(Map<String, dynamic> map, {String id}) {
+  factory AppReview.fromMap(Map<String, dynamic> map, {required String id}) {
     return AppReview(
       id,
       liked: map[LIKED_KEY],
@@ -33,8 +33,8 @@ class AppReview extends Model {
   @override
   Map<String, dynamic> toUpdateMap() {
     final map = <String, dynamic>{};
-    if (liked != null) map[LIKED_KEY] = liked;
-    if (feedback != null) map[FEEDBACK_KEY] = feedback;
+    map[LIKED_KEY] = liked;
+    map[FEEDBACK_KEY] = feedback;
     return map;
   }
 }

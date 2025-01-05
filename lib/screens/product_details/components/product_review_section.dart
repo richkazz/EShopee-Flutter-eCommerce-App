@@ -12,9 +12,9 @@ import 'review_box.dart';
 
 class ProductReviewsSection extends StatelessWidget {
   const ProductReviewsSection({
-    Key key,
-    @required this.product,
-  }) : super(key: key);
+    super.key,
+    required this.product,
+  });
 
   final Product product;
 

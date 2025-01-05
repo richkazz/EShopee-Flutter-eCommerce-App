@@ -11,11 +11,11 @@ class Body extends StatelessWidget {
   final String searchIn;
 
   const Body({
-    Key key,
-    @required this.searchQuery,
-    @required this.searchResultProductsId,
-    @required this.searchIn,
-  }) : super(key: key);
+    super.key,
+    required this.searchQuery,
+    required this.searchResultProductsId,
+    required this.searchIn,
+  });
 
   @override
   Widget build(BuildContext context) {

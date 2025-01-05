@@ -9,9 +9,9 @@ class ProductDetailsScreen extends StatelessWidget {
   final String productId;
 
   const ProductDetailsScreen({
-    Key key,
-    @required this.productId,
-  }) : super(key: key);
+    super.key,
+    required this.productId,
+  });
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(

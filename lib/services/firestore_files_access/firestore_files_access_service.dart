@@ -1,8 +1,5 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
-
 class FirestoreFilesAccess {
   FirestoreFilesAccess._privateConstructor();
   static FirestoreFilesAccess _instance =
@@ -10,42 +7,40 @@ class FirestoreFilesAccess {
   factory FirestoreFilesAccess() {
     return _instance;
   }
-  FirebaseFirestore _firebaseFirestore;
-  FirebaseFirestore get firestore {
-    if (_firebaseFirestore == null) {
-      _firebaseFirestore = FirebaseFirestore.instance;
-    }
-    return _firebaseFirestore;
-  }
+
+  // Fake data structure to simulate file storage
+  Map<String, String> _storage = {}; // path -> download URL
 
   Future<String> uploadFileToPath(File file, String path) async {
-    final Reference firestorageRef = FirebaseStorage.instance.ref();
-    final snapshot = await firestorageRef.child(path).putFile(file);
-    final downloadUrl = await snapshot.ref.getDownloadURL();
+    // Simulate uploading by generating a fake download URL
+    String downloadUrl = "fake_download_url_for_$path";
+
+    // Store the path and URL in our fake storage
+    _storage[path] = downloadUrl;
+
     return downloadUrl;
   }
 
   Future<bool> deleteFileFromPath(String path) async {
-    final Reference firestorageRef = FirebaseStorage.instance.ref();
-    await firestorageRef.child(path).delete();
-    return true;
+    if (_storage.containsKey(path)) {
+      _storage.remove(path);
+      return true;
+    } else {
+      throw Exception("File not found at path: $path");
+    }
   }
 
   Future<String> getDeveloperImage() async {
     const filename = "about_developer/developer";
     List<String> extensions = <String>["jpg", "jpeg", "jpe", "jfif"];
-    final Reference firestorageRef = FirebaseStorage.instance.ref();
+
     for (final ext in extensions) {
-      try {
-        final url =
-            await firestorageRef.child("$filename.$ext").getDownloadURL();
-        return url;
-      } catch (_) {
-        continue;
+      String path = "$filename.$ext";
+      if (_storage.containsKey(path)) {
+        return _storage[path]!;
       }
     }
-    throw FirebaseException(
-        message: "No JPEG Image found for Developer",
-        plugin: 'Firebase Storage');
+
+    throw Exception("No JPEG Image found for Developer");
   }
 }

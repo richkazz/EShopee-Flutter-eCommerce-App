@@ -1,14 +1,10 @@
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/custom_suffix_icon.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/credential_actions_exceptions.dart';
-import 'package:e_commerce_app_flutter/exceptions/firebaseauth/messeged_firebaseauth_exception.dart';
 
 import 'package:e_commerce_app_flutter/services/authentification/authentification_service.dart';
 import 'package:e_commerce_app_flutter/size_config.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 
 import '../../../constants.dart';
@@ -93,12 +89,12 @@ class _ChangeEmailFormState extends State<ChangeEmailForm> {
   }
 
   Widget buildCurrentEmailFormField() {
-    return StreamBuilder<User>(
+    return StreamBuilder<User?>(
       stream: AuthentificationService().userChanges,
       builder: (context, snapshot) {
-        String currentEmail;
+        late String currentEmail;
         if (snapshot.hasData && snapshot.data != null)
-          currentEmail = snapshot.data.email;
+          currentEmail = snapshot.data!.email;
         final textField = TextFormField(
           controller: currentEmailController,
           decoration: InputDecoration(
@@ -111,7 +107,7 @@ class _ChangeEmailFormState extends State<ChangeEmailForm> {
           ),
           readOnly: true,
         );
-        if (currentEmail != null) currentEmailController.text = currentEmail;
+        currentEmailController.text = currentEmail;
         return textField;
       },
     );
@@ -143,27 +139,21 @@ class _ChangeEmailFormState extends State<ChangeEmailForm> {
   }
 
   Future<void> changeEmailButtonCallback() async {
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
       final AuthentificationService authService = AuthentificationService();
       bool passwordValidation =
           await authService.verifyCurrentUserPassword(passwordController.text);
       if (passwordValidation) {
         bool updationStatus = false;
-        String snackbarMessage;
+        late String snackbarMessage;
         try {
           updationStatus = await authService.changeEmailForCurrentUser(
               newEmail: newEmailController.text);
           if (updationStatus == true) {
             snackbarMessage =
                 "Verification email sent. Please verify your new email";
-          } else {
-            throw FirebaseCredentialActionAuthUnknownReasonFailureException(
-                message:
-                    "Couldn't process your request now. Please try again later");
-          }
-        } on MessagedFirebaseAuthException catch (e) {
-          snackbarMessage = e.message;
+          } else {}
         } catch (e) {
           snackbarMessage = e.toString();
         } finally {

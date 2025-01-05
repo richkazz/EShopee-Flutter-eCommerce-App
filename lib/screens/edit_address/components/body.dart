@@ -9,7 +9,7 @@ import 'address_details_form.dart';
 class Body extends StatelessWidget {
   final String addressIdToEdit;
 
-  const Body({Key key, this.addressIdToEdit}) : super(key: key);
+  const Body({super.key, this.addressIdToEdit});
   @override
   Widget build(BuildContext context) {
     return SafeArea(

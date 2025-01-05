@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_commerce_app_flutter/models/Address.dart';
 import 'package:e_commerce_app_flutter/models/CartItem.dart';
 import 'package:e_commerce_app_flutter/models/OrderedProduct.dart';
@@ -21,343 +20,403 @@ class UserDatabaseHelper {
   factory UserDatabaseHelper() {
     return _instance;
   }
-  FirebaseFirestore _firebaseFirestore;
-  FirebaseFirestore get firestore {
-    if (_firebaseFirestore == null) {
-      _firebaseFirestore = FirebaseFirestore.instance;
-    }
-    return _firebaseFirestore;
-  }
+
+  // Fake data storage
+  Map<String, Map<String, dynamic>> _users = {}; // UID -> User Data
+  Map<String, List<Address>> _addresses = {}; // UID -> List of Addresses
+  Map<String, List<String>> _userFavProducts =
+      {}; // UID -> List of Favorite Product IDs
+  Map<String, List<CartItem>> _cart =
+      {}; // UID -> List of Cart Items (simplified to just hold product IDs and counts)
+  Map<String, List<OrderedProduct>> _orderedProducts =
+      {}; // UID -> List of Ordered Products
 
   Future<void> createNewUser(String uid) async {
-    await firestore.collection(USERS_COLLECTION_NAME).doc(uid).set({
+    _users[uid] = {
       DP_KEY: null,
       PHONE_KEY: null,
-      FAV_PRODUCTS_KEY: List<String>(),
-    });
+      FAV_PRODUCTS_KEY: <String>[],
+    };
+    _addresses[uid] = [];
+    _cart[uid] = [];
+    _orderedProducts[uid] = [];
+    _userFavProducts[uid] = [];
   }
 
   Future<void> deleteCurrentUserData() async {
-    final uid = AuthentificationService().currentUser.uid;
-    final docRef = firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    final cartCollectionRef = docRef.collection(CART_COLLECTION_NAME);
-    final addressCollectionRef = docRef.collection(ADDRESSES_COLLECTION_NAME);
-    final ordersCollectionRef =
-        docRef.collection(ORDERED_PRODUCTS_COLLECTION_NAME);
-
-    final cartDocs = await cartCollectionRef.get();
-    for (final cartDoc in cartDocs.docs) {
-      await cartCollectionRef.doc(cartDoc.id).delete();
-    }
-    final addressesDocs = await addressCollectionRef.get();
-    for (final addressDoc in addressesDocs.docs) {
-      await addressCollectionRef.doc(addressDoc.id).delete();
-    }
-    final ordersDoc = await ordersCollectionRef.get();
-    for (final orderDoc in ordersDoc.docs) {
-      await ordersCollectionRef.doc(orderDoc.id).delete();
+    final uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
 
-    await docRef.delete();
+    _cart.remove(uid);
+    _addresses.remove(uid);
+    _orderedProducts.remove(uid);
+    _userFavProducts.remove(uid);
+    _users.remove(uid);
   }
 
   Future<bool> isProductFavourite(String productId) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    final userDocData = (await userDocSnapshot.get()).data();
-    final favList = userDocData[FAV_PRODUCTS_KEY].cast<String>();
-    if (favList.contains(productId)) {
-      return true;
-    } else {
-      return false;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+    final favList = _users[uid]![FAV_PRODUCTS_KEY].cast<String>();
+    return favList.contains(productId);
   }
 
-  Future<List> get usersFavouriteProductsList async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    final userDocData = (await userDocSnapshot.get()).data();
-    final favList = userDocData[FAV_PRODUCTS_KEY];
-    return favList;
+  Future<List<String>> get usersFavouriteProductsList async {
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    return _userFavProducts[uid] ?? [];
   }
 
   Future<bool> switchProductFavouriteStatus(
       String productId, bool newState) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-
-    if (newState == true) {
-      userDocSnapshot.update({
-        FAV_PRODUCTS_KEY: FieldValue.arrayUnion([productId])
-      });
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    if (newState) {
+      if (_userFavProducts[uid] == null) {
+        _userFavProducts[uid] = [];
+      }
+      if (!_userFavProducts[uid]!.contains(productId)) {
+        _userFavProducts[uid]!.add(productId);
+      }
     } else {
-      userDocSnapshot.update({
-        FAV_PRODUCTS_KEY: FieldValue.arrayRemove([productId])
-      });
+      _userFavProducts[uid]?.remove(productId);
     }
     return true;
   }
 
   Future<List<String>> get addressesList async {
-    String uid = AuthentificationService().currentUser.uid;
-    final snapshot = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ADDRESSES_COLLECTION_NAME)
-        .get();
-    final addresses = List<String>();
-    snapshot.docs.forEach((doc) {
-      addresses.add(doc.id);
-    });
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
 
-    return addresses;
+    final addresses = _addresses[uid] ?? [];
+    final addressesId =
+        List<String>.generate(addresses.length, (index) => index.toString());
+
+    return addressesId;
   }
 
   Future<Address> getAddressFromId(String id) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final doc = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ADDRESSES_COLLECTION_NAME)
-        .doc(id)
-        .get();
-    final address = Address.fromMap(doc.data(), id: doc.id);
-    return address;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    final addresses = _addresses[uid] ?? [];
+    if (id.isNotEmpty && addresses.length > int.parse(id)) {
+      return addresses[int.parse(id)];
+    } else {
+      throw Exception("Address not found");
+    }
   }
 
   Future<bool> addAddressForCurrentUser(Address address) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final addressesCollectionReference = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ADDRESSES_COLLECTION_NAME);
-    await addressesCollectionReference.add(address.toMap());
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    if (_addresses[uid] == null) {
+      _addresses[uid] = [];
+    }
+    _addresses[uid]!.add(address);
     return true;
   }
 
   Future<bool> deleteAddressForCurrentUser(String id) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final addressDocReference = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ADDRESSES_COLLECTION_NAME)
-        .doc(id);
-    await addressDocReference.delete();
-    return true;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    if (id.isNotEmpty &&
+        _addresses[uid] != null &&
+        _addresses[uid]!.length > int.parse(id)) {
+      _addresses[uid]!.removeAt(int.parse(id));
+      return true;
+    } else {
+      throw Exception("invalid id");
+    }
   }
 
   Future<bool> updateAddressForCurrentUser(Address address) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final addressDocReference = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ADDRESSES_COLLECTION_NAME)
-        .doc(address.id);
-    await addressDocReference.update(address.toMap());
-    return true;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+    if (address.id != null &&
+        _addresses[uid] != null &&
+        _addresses[uid]!.length > int.parse(address.id!)) {
+      _addresses[uid]![int.parse(address.id!)] = address;
+      return true;
+    } else {
+      throw Exception("invalid id");
+    }
   }
 
   Future<CartItem> getCartItemFromId(String id) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartCollectionRef = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME);
-    final docRef = cartCollectionRef.doc(id);
-    final docSnapshot = await docRef.get();
-    final cartItem = CartItem.fromMap(docSnapshot.data(), id: docSnapshot.id);
-    return cartItem;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    final cartItems = _cart[uid] ?? [];
+    if (id.isNotEmpty && cartItems.length > int.parse(id)) {
+      return cartItems[int.parse(id)];
+    } else {
+      throw Exception("CartItem not found");
+    }
   }
 
   Future<bool> addProductToCart(String productId) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartCollectionRef = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME);
-    final docRef = cartCollectionRef.doc(productId);
-    final docSnapshot = await docRef.get();
-    bool alreadyPresent = docSnapshot.exists;
-    if (alreadyPresent == false) {
-      docRef.set(CartItem(itemCount: 1).toMap());
-    } else {
-      docRef.update({CartItem.ITEM_COUNT_KEY: FieldValue.increment(1)});
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    if (_cart[uid] == null) {
+      _cart[uid] = [];
+    }
+
+    // Check if product already exists in cart
+    bool found = false;
+    for (int i = 0; i < _cart[uid]!.length; i++) {
+      if (_cart[uid]![i].id == productId) {
+        // Increase item count if found
+        _cart[uid]![i] =
+            _cart[uid]![i].copyWith(itemCount: _cart[uid]![i].itemCount + 1);
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      // Add new CartItem if not found
+      _cart[uid]!.add(CartItem(id: productId, itemCount: 1));
+    }
+
     return true;
   }
 
   Future<List<String>> emptyCart() async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartItems = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME)
-        .get();
-    List orderedProductsUid = List<String>();
-    for (final doc in cartItems.docs) {
-      orderedProductsUid.add(doc.id);
-      await doc.reference.delete();
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    List<String> orderedProductsUid = [];
+    if (_cart[uid] != null) {
+      for (final cartItem in _cart[uid]!) {
+        orderedProductsUid.add(cartItem.id);
+      }
+      _cart[uid]!.clear();
+    }
+
     return orderedProductsUid;
   }
 
   Future<num> get cartTotal async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartItems = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME)
-        .get();
-    num total = 0.0;
-    for (final doc in cartItems.docs) {
-      num itemsCount = doc.data()[CartItem.ITEM_COUNT_KEY];
-      final product = await ProductDatabaseHelper().getProductWithID(doc.id);
-      total += (itemsCount * product.discountPrice);
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    num total = 0.0;
+    if (_cart[uid] != null) {
+      for (final cartItem in _cart[uid]!) {
+        final product =
+            await ProductDatabaseHelper().getProductWithID(cartItem.id);
+        if (product != null) {
+          total += (cartItem.itemCount * product.discountPrice);
+        }
+      }
+    }
+
     return total;
   }
 
   Future<bool> removeProductFromCart(String cartItemID) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartCollectionReference = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME);
-    await cartCollectionReference.doc(cartItemID).delete();
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    if (_cart[uid] != null) {
+      if (cartItemID.isNotEmpty && _cart[uid]!.length > int.parse(cartItemID)) {
+        _cart[uid]!.removeAt(int.parse(cartItemID));
+      }
+    }
+
     return true;
   }
 
   Future<bool> increaseCartItemCount(String cartItemID) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartCollectionRef = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME);
-    final docRef = cartCollectionRef.doc(cartItemID);
-    docRef.update({CartItem.ITEM_COUNT_KEY: FieldValue.increment(1)});
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    if (_cart[uid] != null) {
+      if (cartItemID.isNotEmpty && _cart[uid]!.length > int.parse(cartItemID)) {
+        _cart[uid]![int.parse(cartItemID)] = _cart[uid]![int.parse(cartItemID)]
+            .copyWith(
+                itemCount: _cart[uid]![int.parse(cartItemID)].itemCount + 1);
+      }
+    }
+
     return true;
   }
 
   Future<bool> decreaseCartItemCount(String cartItemID) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final cartCollectionRef = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME);
-    final docRef = cartCollectionRef.doc(cartItemID);
-    final docSnapshot = await docRef.get();
-    int currentCount = docSnapshot.data()[CartItem.ITEM_COUNT_KEY];
-    if (currentCount <= 1) {
-      return removeProductFromCart(cartItemID);
-    } else {
-      docRef.update({CartItem.ITEM_COUNT_KEY: FieldValue.increment(-1)});
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    if (_cart[uid] != null) {
+      if (cartItemID.isNotEmpty && _cart[uid]!.length > int.parse(cartItemID)) {
+        final currentCount = _cart[uid]![int.parse(cartItemID)].itemCount;
+        if (currentCount <= 1) {
+          return removeProductFromCart(cartItemID);
+        } else {
+          _cart[uid]![int.parse(cartItemID)] =
+              _cart[uid]![int.parse(cartItemID)].copyWith(
+                  itemCount: _cart[uid]![int.parse(cartItemID)].itemCount - 1);
+        }
+      }
+    }
+
     return true;
   }
 
   Future<List<String>> get allCartItemsList async {
-    String uid = AuthentificationService().currentUser.uid;
-    final querySnapshot = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(CART_COLLECTION_NAME)
-        .get();
-    List itemsId = List<String>();
-    for (final item in querySnapshot.docs) {
-      itemsId.add(item.id);
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    List<String> itemsId = [];
+    if (_cart[uid] != null) {
+      for (int i = 0; i < _cart[uid]!.length; i++) {
+        itemsId.add(i.toString());
+      }
+    }
+
     return itemsId;
   }
 
   Future<List<String>> get orderedProductsList async {
-    String uid = AuthentificationService().currentUser.uid;
-    final orderedProductsSnapshot = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ORDERED_PRODUCTS_COLLECTION_NAME)
-        .get();
-    List orderedProductsId = List<String>();
-    for (final doc in orderedProductsSnapshot.docs) {
-      orderedProductsId.add(doc.id);
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    List<String> orderedProductsId = [];
+    if (_orderedProducts[uid] != null) {
+      for (int i = 0; i < _orderedProducts[uid]!.length; i++) {
+        orderedProductsId.add(i.toString());
+      }
+    }
+
     return orderedProductsId;
   }
 
   Future<bool> addToMyOrders(List<OrderedProduct> orders) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final orderedProductsCollectionRef = firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ORDERED_PRODUCTS_COLLECTION_NAME);
-    for (final order in orders) {
-      await orderedProductsCollectionRef.add(order.toMap());
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
     }
+
+    if (_orderedProducts[uid] == null) {
+      _orderedProducts[uid] = [];
+    }
+    _orderedProducts[uid]!.addAll(orders);
+
     return true;
   }
 
   Future<OrderedProduct> getOrderedProductFromId(String id) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final doc = await firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .collection(ORDERED_PRODUCTS_COLLECTION_NAME)
-        .doc(id)
-        .get();
-    final orderedProduct = OrderedProduct.fromMap(doc.data(), id: doc.id);
-    return orderedProduct;
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    if (_orderedProducts[uid] != null &&
+        id.isNotEmpty &&
+        _orderedProducts[uid]!.length > int.parse(id)) {
+      return _orderedProducts[uid]![int.parse(id)];
+    } else {
+      throw Exception("Ordered product not found");
+    }
   }
 
-  Stream<DocumentSnapshot> get currentUserDataStream {
-    String uid = AuthentificationService().currentUser.uid;
-    return firestore
-        .collection(USERS_COLLECTION_NAME)
-        .doc(uid)
-        .get()
-        .asStream();
+  // For simplicity, we'll just emit a value whenever we think the user data might have changed.
+  // In a real app with listeners, you would emit specific changes.
+  Stream<Map<String, dynamic>> get currentUserDataStream async* {
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    // Emit the current user data
+    yield _users[uid] ?? {};
+
+    // You can add more logic here to emit new data when something changes,
+    // but for this fake implementation, we'll keep it simple.
   }
 
   Future<bool> updatePhoneForCurrentUser(String phone) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    await userDocSnapshot.update({PHONE_KEY: phone});
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    _users[uid]![PHONE_KEY] = phone;
     return true;
   }
 
+  // We'll just return a fake path for the display picture
   String getPathForCurrentUserDisplayPicture() {
-    final String currentUserUid = AuthentificationService().currentUser.uid;
-    return "user/display_picture/$currentUserUid";
+    final String? currentUserUid = AuthentificationService().currentUser?.uid;
+    if (currentUserUid == null) {
+      throw Exception("User not logged in");
+    }
+
+    return "fake_user/display_picture/$currentUserUid";
   }
 
   Future<bool> uploadDisplayPictureForCurrentUser(String url) async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    await userDocSnapshot.update(
-      {DP_KEY: url},
-    );
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    _users[uid]![DP_KEY] = url;
     return true;
   }
 
   Future<bool> removeDisplayPictureForCurrentUser() async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        firestore.collection(USERS_COLLECTION_NAME).doc(uid);
-    await userDocSnapshot.update(
-      {
-        DP_KEY: FieldValue.delete(),
-      },
-    );
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    _users[uid]![DP_KEY] = null;
     return true;
   }
 
-  Future<String> get displayPictureForCurrentUser async {
-    String uid = AuthentificationService().currentUser.uid;
-    final userDocSnapshot =
-        await firestore.collection(USERS_COLLECTION_NAME).doc(uid).get();
-    return userDocSnapshot.data()[DP_KEY];
+  Future<String?> get displayPictureForCurrentUser async {
+    String? uid = AuthentificationService().currentUser?.uid;
+    if (uid == null) {
+      throw Exception("User not logged in");
+    }
+
+    return _users[uid]![DP_KEY];
   }
 }

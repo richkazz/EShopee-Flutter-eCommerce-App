@@ -216,7 +216,7 @@ class _BodyState extends State<Body> {
                       bottomRight: Radius.circular(16),
                     ),
                   ),
-                  child: FlatButton(
+                  child: ElevatedButton(
                     onPressed: () async {
                       String currentUserUid =
                           AuthentificationService().currentUser.uid;
@@ -228,14 +228,7 @@ class _BodyState extends State<Body> {
                         Logger().w("Firebase Exception: $e");
                       } catch (e) {
                         Logger().w("Unknown Exception: $e");
-                      } finally {
-                        if (prevReview == null) {
-                          prevReview = Review(
-                            currentUserUid,
-                            reviewerUid: currentUserUid,
-                          );
-                        }
-                      }
+                      } finally {}
 
                       final result = await showDialog(
                         context: context,

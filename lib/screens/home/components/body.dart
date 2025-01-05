@@ -11,7 +11,6 @@ import 'package:e_commerce_app_flutter/services/data_streams/favourite_products_
 import 'package:e_commerce_app_flutter/services/database/product_database_helper.dart';
 import 'package:e_commerce_app_flutter/size_config.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 import '../../../utils.dart';
 import '../components/home_header.dart';
@@ -102,22 +101,18 @@ class _BodyState extends State<Body> {
                     try {
                       searchedProductsId = await ProductDatabaseHelper()
                           .searchInProducts(query.toLowerCase());
-                      if (searchedProductsId != null) {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => SearchResultScreen(
-                              searchQuery: query,
-                              searchResultProductsId: searchedProductsId,
-                              searchIn: "All Products",
-                            ),
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SearchResultScreen(
+                            searchQuery: query,
+                            searchResultProductsId: searchedProductsId,
+                            searchIn: "All Products",
                           ),
-                        );
-                        await refreshPage();
-                      } else {
-                        throw "Couldn't perform search due to some unknown reason";
-                      }
-                    } catch (e) {
+                        ),
+                      );
+                      await refreshPage();
+                                        } catch (e) {
                       final error = e.toString();
                       Logger().e(error);
                       ScaffoldMessenger.of(context).showSnackBar(

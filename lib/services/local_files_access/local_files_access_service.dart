@@ -24,13 +24,13 @@ Future<String> choseImageFromLocalFiles(
       return AlertDialog(
         title: Text("Chose image source"),
         actions: [
-          FlatButton(
+          ElevatedButton(
             child: Text("Camera"),
             onPressed: () {
               Navigator.pop(context, ImageSource.camera);
             },
           ),
-          FlatButton(
+          ElevatedButton(
             child: Text("Gallery"),
             onPressed: () {
               Navigator.pop(context, ImageSource.gallery);
@@ -44,17 +44,14 @@ Future<String> choseImageFromLocalFiles(
   if (imgSource == null)
     throw LocalImagePickingInvalidImageException(
         message: "No image source selected");
-  final PickedFile imagePicked = await imgPicker.getImage(source: imgSource);
-  if (imagePicked == null) {
-    throw LocalImagePickingInvalidImageException();
+  final imagePicked = await imgPicker.pickImage(source: imgSource);
+  if (imagePicked == null)
+    throw LocalImagePickingInvalidImageException(message: "No image selected");
+  final fileLength = await File(imagePicked.path).length();
+  if (fileLength > (maxSizeInKB * 1024) || fileLength < (minSizeInKB * 1024)) {
+    throw LocalImagePickingFileSizeOutOfBoundsException(
+        message: "Image size should not exceed 1MB");
   } else {
-    final fileLength = await File(imagePicked.path).length();
-    if (fileLength > (maxSizeInKB * 1024) ||
-        fileLength < (minSizeInKB * 1024)) {
-      throw LocalImagePickingFileSizeOutOfBoundsException(
-          message: "Image size should not exceed 1MB");
-    } else {
-      return imagePicked.path;
-    }
+    return imagePicked.path;
   }
 }

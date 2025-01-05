@@ -1,16 +1,14 @@
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/services/authentification/authentification_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 
 import '../../../size_config.dart';
 
 class ChangeDisplayNameForm extends StatefulWidget {
   const ChangeDisplayNameForm({
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ChangeDisplayNameFormState createState() => _ChangeDisplayNameFormState();
@@ -88,12 +86,12 @@ class _ChangeDisplayNameFormState extends State<ChangeDisplayNameForm> {
   }
 
   Widget buildCurrentDisplayNameField() {
-    return StreamBuilder<User>(
+    return StreamBuilder<User?>(
       stream: AuthentificationService().userChanges,
       builder: (context, snapshot) {
-        String displayName;
+        late String displayName;
         if (snapshot.hasData && snapshot.data != null)
-          displayName = snapshot.data.displayName;
+          displayName = snapshot.data!.displayName;
         final textField = TextFormField(
           controller: currentDisplayNameController,
           decoration: InputDecoration(
@@ -104,16 +102,15 @@ class _ChangeDisplayNameFormState extends State<ChangeDisplayNameForm> {
           ),
           readOnly: true,
         );
-        if (displayName != null)
-          currentDisplayNameController.text = displayName;
+        currentDisplayNameController.text = displayName;
         return textField;
       },
     );
   }
 
   Future<void> changeDisplayNameButtonCallback() async {
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
       await AuthentificationService()
           .updateCurrentUserDisplayName(newDisplayNameController.text);
       print("Display Name updated to ${newDisplayNameController.text} ...");

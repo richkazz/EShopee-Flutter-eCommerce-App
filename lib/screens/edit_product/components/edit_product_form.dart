@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
-import 'package:e_commerce_app_flutter/exceptions/local_files_handling/image_picking_exceptions.dart';
 import 'package:e_commerce_app_flutter/exceptions/local_files_handling/local_file_handling_exception.dart';
 import 'package:e_commerce_app_flutter/models/Product.dart';
 import 'package:e_commerce_app_flutter/screens/edit_product/provider_models/ProductDetails.dart';
@@ -13,7 +12,6 @@ import 'package:e_commerce_app_flutter/services/local_files_access/local_files_a
 import 'package:enum_to_string/enum_to_string.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_tags/flutter_tags.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 import 'package:provider/provider.dart';
 
@@ -23,9 +21,9 @@ import '../../../size_config.dart';
 class EditProductForm extends StatefulWidget {
   final Product product;
   EditProductForm({
-    Key key,
+    super.key,
     this.product,
-  }) : super(key: key);
+  });
 
   @override
   _EditProductFormState createState() => _EditProductFormState();
@@ -67,20 +65,14 @@ class _EditProductFormState extends State<EditProductForm> {
   @override
   void initState() {
     super.initState();
-    if (widget.product == null) {
-      product = Product(null);
-      newProduct = true;
-    } else {
-      product = widget.product;
-      newProduct = false;
-      final productDetails =
-          Provider.of<ProductDetails>(context, listen: false);
-      productDetails.initialSelectedImages = widget.product.images
-          .map((e) => CustomImage(imgType: ImageType.network, path: e))
-          .toList();
-      productDetails.initialProductType = product.productType;
-      productDetails.initSearchTags = product.searchTags ?? [];
-    }
+    product = widget.product;
+    newProduct = false;
+    final productDetails = Provider.of<ProductDetails>(context, listen: false);
+    productDetails.initialSelectedImages = widget.product.images
+        .map((e) => CustomImage(imgType: ImageType.network, path: e))
+        .toList();
+    productDetails.initialProductType = product.productType;
+    productDetails.initSearchTags = product.searchTags ?? [];
   }
 
   @override
@@ -169,7 +161,7 @@ class _EditProductFormState extends State<EditProductForm> {
         maintainState: true,
         title: Text(
           "Basic Details",
-          style: Theme.of(context).textTheme.headline6,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         leading: Icon(
           Icons.shop,
@@ -212,7 +204,7 @@ class _EditProductFormState extends State<EditProductForm> {
         maintainState: true,
         title: Text(
           "Describe Product",
-          style: Theme.of(context).textTheme.headline6,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
         leading: Icon(
           Icons.description,
@@ -285,7 +277,7 @@ class _EditProductFormState extends State<EditProductForm> {
     return ExpansionTile(
       title: Text(
         "Search Tags",
-        style: Theme.of(context).textTheme.headline6,
+        style: Theme.of(context).textTheme.titleLarge,
       ),
       leading: Icon(Icons.check_circle_sharp),
       childrenPadding:
@@ -302,7 +294,7 @@ class _EditProductFormState extends State<EditProductForm> {
     return ExpansionTile(
       title: Text(
         "Upload Images",
-        style: Theme.of(context).textTheme.headline6,
+        style: Theme.of(context).textTheme.titleLarge,
       ),
       leading: Icon(Icons.image),
       childrenPadding:
@@ -517,14 +509,6 @@ class _EditProductFormState extends State<EditProductForm> {
       );
       return;
     }
-    if (productDetails.productType == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Please select Product Type"),
-        ),
-      );
-      return;
-    }
     if (productDetails.searchTags.length < 3) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -554,11 +538,7 @@ class _EditProductFormState extends State<EditProductForm> {
           );
         },
       );
-      if (productId != null) {
-        snackbarMessage = "Product Info updated successfully";
-      } else {
-        throw "Couldn't update product info due to some unknown issue";
-      }
+      snackbarMessage = "Product Info updated successfully";
     } on FirebaseException catch (e) {
       Logger().w("Firebase Exception: $e");
       snackbarMessage = "Something went wrong";
@@ -573,7 +553,6 @@ class _EditProductFormState extends State<EditProductForm> {
         ),
       );
     }
-    if (productId == null) return;
     bool allImagesUploaded = false;
     try {
       allImagesUploaded = await uploadProductImages(productId);
@@ -660,18 +639,8 @@ class _EditProductFormState extends State<EditProductForm> {
         } catch (e) {
           Logger().w("Firebase Exception: $e");
         } finally {
-          if (downloadUrl != null) {
-            productDetails.selectedImages[i] =
-                CustomImage(imgType: ImageType.network, path: downloadUrl);
-          } else {
-            allImagesUpdated = false;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content:
-                    Text("Couldn't upload image ${i + 1} due to some issue"),
-              ),
-            );
-          }
+          productDetails.selectedImages[i] =
+              CustomImage(imgType: ImageType.network, path: downloadUrl);
         }
       }
     }
@@ -689,9 +658,6 @@ class _EditProductFormState extends State<EditProductForm> {
     String snackbarMessage;
     try {
       path = await choseImageFromLocalFiles(context);
-      if (path == null) {
-        throw LocalImagePickingUnknownReasonFailureException();
-      }
     } on LocalFileHandlingException catch (e) {
       Logger().i("Local File Handling Exception: $e");
       snackbarMessage = e.toString();
@@ -699,24 +665,14 @@ class _EditProductFormState extends State<EditProductForm> {
       Logger().i("Unknown Exception: $e");
       snackbarMessage = e.toString();
     } finally {
-      if (snackbarMessage != null) {
-        Logger().i(snackbarMessage);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(snackbarMessage),
-          ),
-        );
-      }
+      Logger().i(snackbarMessage);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(snackbarMessage),
+        ),
+      );
     }
-    if (path == null) {
-      return;
-    }
-    if (index == null) {
-      productDetails.addNewSelectedImage(
-          CustomImage(imgType: ImageType.local, path: path));
-    } else {
-      productDetails.setSelectedImageAtIndex(
-          CustomImage(imgType: ImageType.local, path: path), index);
-    }
+    productDetails.setSelectedImageAtIndex(
+        CustomImage(imgType: ImageType.local, path: path), index);
   }
 }

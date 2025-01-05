@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/models/Address.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
@@ -11,9 +10,9 @@ import '../../../constants.dart';
 class AddressDetailsForm extends StatefulWidget {
   final Address addressToEdit;
   AddressDetailsForm({
-    Key key,
+    super.key,
     this.addressToEdit,
-  }) : super(key: key);
+  });
 
   @override
   _AddressDetailsFormState createState() => _AddressDetailsFormState();
@@ -95,18 +94,16 @@ class _AddressDetailsFormState extends State<AddressDetailsForm> {
         ],
       ),
     );
-    if (widget.addressToEdit != null) {
-      titleFieldController.text = widget.addressToEdit.title;
-      receiverFieldController.text = widget.addressToEdit.receiver;
-      addressLine1FieldController.text = widget.addressToEdit.addresLine1;
-      addressLine2FieldController.text = widget.addressToEdit.addressLine2;
-      cityFieldController.text = widget.addressToEdit.city;
-      districtFieldController.text = widget.addressToEdit.district;
-      stateFieldController.text = widget.addressToEdit.state;
-      landmarkFieldController.text = widget.addressToEdit.landmark;
-      pincodeFieldController.text = widget.addressToEdit.pincode;
-      phoneFieldController.text = widget.addressToEdit.phone;
-    }
+    titleFieldController.text = widget.addressToEdit.title;
+    receiverFieldController.text = widget.addressToEdit.receiver;
+    addressLine1FieldController.text = widget.addressToEdit.addresLine1;
+    addressLine2FieldController.text = widget.addressToEdit.addressLine2;
+    cityFieldController.text = widget.addressToEdit.city;
+    districtFieldController.text = widget.addressToEdit.district;
+    stateFieldController.text = widget.addressToEdit.state;
+    landmarkFieldController.text = widget.addressToEdit.landmark;
+    pincodeFieldController.text = widget.addressToEdit.pincode;
+    phoneFieldController.text = widget.addressToEdit.phone;
     return form;
   }
 

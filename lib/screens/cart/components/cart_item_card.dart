@@ -10,13 +10,13 @@ import '../../../size_config.dart';
 class CartItemCard extends StatelessWidget {
   final CartItem cartItem;
   const CartItemCard({
-    Key key,
-    @required this.cartItem,
-  }) : super(key: key);
+    super.key,
+    required this.cartItem,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Product>(
+    return FutureBuilder<Product?>(
       future: ProductDatabaseHelper().getProductWithID(cartItem.id),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
@@ -33,7 +33,7 @@ class CartItemCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     child: Image.asset(
-                      snapshot.data.images[0],
+                      snapshot.data!.images[0],
                     ),
                   ),
                 ),
@@ -43,7 +43,7 @@ class CartItemCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    snapshot.data.title,
+                    snapshot.data!.title,
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.black,
@@ -53,7 +53,7 @@ class CartItemCard extends StatelessWidget {
                   SizedBox(height: 10),
                   Text.rich(
                     TextSpan(
-                        text: "\$${snapshot.data.originalPrice}",
+                        text: "\$${snapshot.data!.originalPrice}",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: kPrimaryColor,

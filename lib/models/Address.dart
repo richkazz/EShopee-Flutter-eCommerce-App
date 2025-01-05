@@ -25,20 +25,20 @@ class Address extends Model {
   String phone;
 
   Address({
-    String id,
-    this.title,
-    this.receiver,
-    this.addresLine1,
-    this.addressLine2,
-    this.city,
-    this.district,
-    this.state,
-    this.landmark,
-    this.pincode,
-    this.phone,
+    required String id,
+    required this.title,
+    required this.receiver,
+    required this.addresLine1,
+    required this.addressLine2,
+    required this.city,
+    required this.district,
+    required this.state,
+    required this.landmark,
+    required this.pincode,
+    required this.phone,
   }) : super(id);
 
-  factory Address.fromMap(Map<String, dynamic> map, {String id}) {
+  factory Address.fromMap(Map<String, dynamic> map, {required String id}) {
     return Address(
       id: id,
       title: map[TITLE_KEY],
@@ -75,16 +75,16 @@ class Address extends Model {
   @override
   Map<String, dynamic> toUpdateMap() {
     final map = <String, dynamic>{};
-    if (title != null) map[TITLE_KEY] = title;
-    if (receiver != null) map[RECEIVER_KEY] = receiver;
-    if (addresLine1 != null) map[ADDRESS_LINE_1_KEY] = addresLine1;
-    if (addressLine2 != null) map[ADDRESS_LINE_2_KEY] = addressLine2;
-    if (city != null) map[CITY_KEY] = city;
-    if (district != null) map[DISTRICT_KEY] = district;
-    if (state != null) map[STATE_KEY] = state;
-    if (landmark != null) map[LANDMARK_KEY] = landmark;
-    if (pincode != null) map[PINCODE_KEY] = pincode;
-    if (phone != null) map[PHONE_KEY] = phone;
+    map[TITLE_KEY] = title;
+    map[RECEIVER_KEY] = receiver;
+    map[ADDRESS_LINE_1_KEY] = addresLine1;
+    map[ADDRESS_LINE_2_KEY] = addressLine2;
+    map[CITY_KEY] = city;
+    map[DISTRICT_KEY] = district;
+    map[STATE_KEY] = state;
+    map[LANDMARK_KEY] = landmark;
+    map[PINCODE_KEY] = pincode;
+    map[PHONE_KEY] = phone;
     return map;
   }
 }

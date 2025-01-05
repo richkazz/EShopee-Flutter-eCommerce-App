@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:e_commerce_app_flutter/models/Model.dart';
 
 class CartItem extends Model {
@@ -6,11 +7,11 @@ class CartItem extends Model {
 
   int itemCount;
   CartItem({
-    String id,
+    required String id,
     this.itemCount = 0,
   }) : super(id);
 
-  factory CartItem.fromMap(Map<String, dynamic> map, {String id}) {
+  factory CartItem.fromMap(Map<String, dynamic> map, {required String id}) {
     return CartItem(
       id: id,
       itemCount: map[ITEM_COUNT_KEY],
@@ -28,7 +29,17 @@ class CartItem extends Model {
   @override
   Map<String, dynamic> toUpdateMap() {
     final map = <String, dynamic>{};
-    if (itemCount != null) map[ITEM_COUNT_KEY] = itemCount;
+    map[ITEM_COUNT_KEY] = itemCount;
     return map;
+  }
+
+  CartItem copyWith({
+    String? id,
+    int? itemCount,
+  }) {
+    return CartItem(
+      id: id ?? this.id,
+      itemCount: itemCount ?? this.itemCount,
+    );
   }
 }

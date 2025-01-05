@@ -1,17 +1,15 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:e_commerce_app_flutter/components/async_progress_dialog.dart';
 import 'package:e_commerce_app_flutter/components/default_button.dart';
 import 'package:e_commerce_app_flutter/services/database/user_database_helper.dart';
 import 'package:flutter/material.dart';
-import 'package:future_progress_dialog/future_progress_dialog.dart';
 import 'package:logger/logger.dart';
 
 import '../../../size_config.dart';
 
 class ChangePhoneNumberForm extends StatefulWidget {
   const ChangePhoneNumberForm({
-    Key key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   _ChangePhoneNumberFormState createState() => _ChangePhoneNumberFormState();
@@ -65,11 +63,11 @@ class _ChangePhoneNumberFormState extends State<ChangePhoneNumberForm> {
   }
 
   Future<void> updatePhoneNumberButtonCallback() async {
-    if (_formKey.currentState.validate()) {
-      _formKey.currentState.save();
+    if (_formKey.currentState!.validate()) {
+      _formKey.currentState!.save();
 
       bool status = false;
-      String snackbarMessage;
+      late String snackbarMessage;
       try {
         status = await UserDatabaseHelper()
             .updatePhoneForCurrentUser(newPhoneNumberController.text);
@@ -78,9 +76,6 @@ class _ChangePhoneNumberFormState extends State<ChangePhoneNumberForm> {
         } else {
           throw "Coulnd't update phone due to unknown reason";
         }
-      } on FirebaseException catch (e) {
-        Logger().w("Firebase Exception: $e");
-        snackbarMessage = "Something went wrong";
       } catch (e) {
         Logger().w("Unknown Exception: $e");
         snackbarMessage = "Something went wrong";
@@ -118,16 +113,16 @@ class _ChangePhoneNumberFormState extends State<ChangePhoneNumberForm> {
   }
 
   Widget buildCurrentPhoneNumberField() {
-    return StreamBuilder<DocumentSnapshot>(
+    return StreamBuilder<Map<String, dynamic>>(
       stream: UserDatabaseHelper().currentUserDataStream,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           final error = snapshot.error;
           Logger().w(error.toString());
         }
-        String currentPhone;
+        late String currentPhone;
         if (snapshot.hasData && snapshot.data != null)
-          currentPhone = snapshot.data.data()[UserDatabaseHelper.PHONE_KEY];
+          currentPhone = snapshot.data![UserDatabaseHelper.PHONE_KEY];
         final textField = TextFormField(
           controller: currentPhoneNumberController,
           decoration: InputDecoration(
@@ -138,8 +133,7 @@ class _ChangePhoneNumberFormState extends State<ChangePhoneNumberForm> {
           ),
           readOnly: true,
         );
-        if (currentPhone != null)
-          currentPhoneNumberController.text = currentPhone;
+        currentPhoneNumberController.text = currentPhone;
         return textField;
       },
     );
